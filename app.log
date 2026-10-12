@@ -1,0 +1,101 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-08-22T20:42:18.542+08:00  INFO 3512 --- [hiya-server] [           main] com.hiya.HiyaServerApplication           : Starting HiyaServerApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 3512 (D:\Learning\Java\Springboot\HiyaServer-SpringBoot\target\hiya-server-0.0.1-SNAPSHOT.jar started by lenovo in D:\Learning\Java\Springboot\HiyaServer-SpringBoot)
+2026-08-22T20:42:18.549+08:00  INFO 3512 --- [hiya-server] [           main] com.hiya.HiyaServerApplication           : No active profile set, falling back to 1 default profile: "default"
+2026-08-22T20:42:19.208+08:00  INFO 3512 --- [hiya-server] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-22T20:42:19.259+08:00  INFO 3512 --- [hiya-server] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 42 ms. Found 7 JPA repository interfaces.
+2026-08-22T20:42:19.848+08:00  INFO 3512 --- [hiya-server] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-08-22T20:42:19.863+08:00  INFO 3512 --- [hiya-server] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-22T20:42:19.864+08:00  INFO 3512 --- [hiya-server] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-08-22T20:42:19.893+08:00  INFO 3512 --- [hiya-server] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1290 ms
+2026-08-22T20:42:20.113+08:00  INFO 3512 --- [hiya-server] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-08-22T20:42:20.182+08:00  INFO 3512 --- [hiya-server] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.1.Final
+2026-08-22T20:42:20.579+08:00  INFO 3512 --- [hiya-server] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-22T20:42:20.610+08:00  INFO 3512 --- [hiya-server] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-22T20:42:20.746+08:00  INFO 3512 --- [hiya-server] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@68479e8b
+2026-08-22T20:42:20.747+08:00  INFO 3512 --- [hiya-server] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-22T20:42:20.815+08:00  INFO 3512 --- [hiya-server] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/hiya_db?useSSL=false&serverTimezone=Asia/Shanghai&useServerPrepStmts=true]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: hiya_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-08-22T20:42:21.450+08:00  INFO 3512 --- [hiya-server] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-22T20:42:21.456+08:00  INFO 3512 --- [hiya-server] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-22T20:42:21.544+08:00  INFO 3512 --- [hiya-server] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-22T20:42:22.390+08:00  WARN 3512 --- [hiya-server] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-22T20:42:22.705+08:00  INFO 3512 --- [hiya-server] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-08-22T20:42:22.723+08:00  INFO 3512 --- [hiya-server] [           main] com.hiya.HiyaServerApplication           : Started HiyaServerApplication in 4.613 seconds (process running for 5.128)
+2026-08-22T20:42:41.398+08:00  INFO 3512 --- [hiya-server] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-22T20:42:41.399+08:00  INFO 3512 --- [hiya-server] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-22T20:42:41.400+08:00  INFO 3512 --- [hiya-server] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Hibernate: 
+    select
+        u1_0.user_id,
+        u1_0.create_time,
+        u1_0.is_banned,
+        u1_0.is_deleted,
+        u1_0.password,
+        u1_0.unban_time,
+        u1_0.update_time,
+        u1_0.user_name 
+    from
+        hiya_user u1_0 
+    where
+        u1_0.user_name=?
+Hibernate: 
+    insert 
+    into
+        hiya_user
+        (create_time, is_banned, is_deleted, password, unban_time, update_time, user_name) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    select
+        u1_0.user_id,
+        u1_0.create_time,
+        u1_0.is_banned,
+        u1_0.is_deleted,
+        u1_0.password,
+        u1_0.unban_time,
+        u1_0.update_time,
+        u1_0.user_name 
+    from
+        hiya_user u1_0 
+    where
+        u1_0.user_name=?
+Hibernate: 
+    insert 
+    into
+        hiya_user_login_log
+        (login_time, user_id) 
+    values
+        (?, ?)
+Hibernate: 
+    select
+        u1_0.user_id,
+        u1_0.create_time,
+        u1_0.is_banned,
+        u1_0.is_deleted,
+        u1_0.password,
+        u1_0.unban_time,
+        u1_0.update_time,
+        u1_0.user_name 
+    from
+        hiya_user u1_0 
+    where
+        u1_0.user_id=?

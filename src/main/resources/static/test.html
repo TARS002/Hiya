@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hiya 服务端测试页</title>
+<style>
+  /* 简单的样式，只为看得清楚，不追求美观 */
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", system-ui, sans-serif; margin: 0; padding: 20px;
+         background: #f5f6f8; color: #222; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  .tip { color: #666; font-size: 13px; margin: 0 0 18px; line-height: 1.7; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .card { background: #fff; border: 1px solid #e2e5ea; border-radius: 8px; padding: 14px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; color: #1a6dd4; }
+  input, button, textarea { font-family: inherit; font-size: 13px; padding: 6px 10px;
+                            border: 1px solid #ccd2da; border-radius: 5px; }
+  button { background: #1a6dd4; color: #fff; border: none; cursor: pointer; }
+  button:hover { background: #1559ad; }
+  button.gray { background: #6b7280; }
+  pre { background: #1e232b; color: #d7e3f4; padding: 10px; border-radius: 6px; font-size: 12px;
+        overflow: auto; max-height: 260px; margin: 8px 0 0; white-space: pre-wrap; word-break: break-all; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .ok { color: #137a3f; font-weight: bold; }
+  .err { color: #b42318; font-weight: bold; }
+  .chat-item { display: inline-block; margin: 3px 6px 3px 0; padding: 4px 10px; background: #eef3fb;
+               border: 1px solid #cddff5; border-radius: 14px; cursor: pointer; font-size: 13px; }
+  .chat-item:hover { background: #dbe9fb; }
+  .msg { padding: 4px 0; border-bottom: 1px dashed #eee; font-size: 13px; }
+  .msg .who { color: #1a6dd4; font-weight: bold; }
+  .msg .time { color: #999; font-size: 11px; margin-left: 6px; }
+  #full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<h1>Hiya 服务端测试页</h1>
+<p class="tip">
+  这是<b>没有前端时用来点着测接口</b>的临时页面（由后端从 <code>src/main/resources/static/</code> 直接托管）。<br>
+  正式前端是另一个工作区的 Vue3 项目，本页面只是联调工具，随时可以删掉。<br>
+  使用前提：后端已启动，且数据库 hiya_db 可用；测试账号可用旧库的 <code>bababoye / bababoye</code>。
+</p>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>1. 注册 / 登录（POST /api/register、POST /api/login）</h2>
+    <div class="row">
+      用户名 <input id="userName" value="bababoye" style="width:110px">
+      密码 <input id="password" type="password" value="bababoye" style="width:110px">
+      <button onclick="doLogin()">登录</button>
+      <button class="gray" onclick="doRegister()">注册</button>
+      <span id="loginState"></span>
+    </div>
+    <div class="row">
+      <button class="gray" onclick="loadMe()">GET /api/me</button>
+      <input id="targetUserId" value="2" style="width:50px" title="targetUserId">
+      <button class="gray" onclick="loadUserInfo()">GET /api/info/{targetUserId}</button>
+      <button class="gray" onclick="loadOnline()">GET /api/friend/online</button>
+    </div>
+    <pre id="outUser">（这里显示接口返回）</pre>
+  </div>
+
+  <div class="card">
+    <h2>2. WebSocket（ws://…/ws?userId=）</h2>
+    <div class="row">
+      <span>状态：</span><span id="wsState">未连接</span>
+      <button class="gray" onclick="connectWs()">连接</button>
+      <button class="gray" onclick="sendPing()">发心跳 ping</button>
+      <button class="gray" onclick="closeWs()">断开</button>
+    </div>
+    <pre id="outWs">（这里显示 WebSocket 收到的推送）</pre>
+  </div>
+
+  <div class="card">
+    <h2>3. 好友（GET /api/friend/list）</h2>
+    <div class="row">
+      <button onclick="loadFriends()">加载好友列表</button>
+      <input id="friendId" value="3" style="width:50px" title="friendId">
+      <button class="gray" onclick="addFriendRequest()">POST /api/friend/request</button>
+    </div>
+    <pre id="outFriend">（这里显示好友列表）</pre>
+  </div>
+
+  <div class="card">
+    <h2>4. 会话与消息（/api/chat/**）</h2>
+    <div class="row">
+      <button onclick="loadChats()">GET /api/chat/list</button>
+      <input id="roomTitle" value="测试群" style="width:90px" title="群名称">
+      <button class="gray" onclick="createRoom()">POST /api/chat/room 建群</button>
+    </div>
+    <div class="row">
+      <input id="joinChatId" value="3" style="width:50px" title="chatId">
+      <button class="gray" onclick="joinChat()">POST .../join 加群</button>
+      <button class="gray" onclick="leaveChat()">POST .../leave 退群</button>
+      <span style="color:#666;font-size:12px">点击下面会话加载记录：</span>
+    </div>
+    <div id="chatList" style="margin-bottom:6px"></div>
+    <div class="row">
+      <input id="msgText" value="你好，这是测试消息" style="flex:1;min-width:160px">
+      <button onclick="sendMessage()">发送（POST 消息）</button>
+    </div>
+    <div id="messageList" style="max-height:200px;overflow:auto"></div>
+  </div>
+
+  <div class="card" id="full">
+    <h2>5. 修改我自己的资料（PUT /api/me）</h2>
+    <div class="row">
+      昵称 <input id="pNick" value="测试昵称" style="width:110px">
+      签名 <input id="pSign" value="今天也要写代码" style="width:170px">
+      性别 <input id="pGender" value="1" style="width:40px" title="0不便透露 1男 2女">
+      <button onclick="updateProfile()">PUT /api/me</button>
+      <button class="gray" onclick="loadMyInfo()">GET /api/me/info</button>
+    </div>
+    <div class="row">
+      <input id="oldPwd" type="password" placeholder="原密码" style="width:110px">
+      <input id="newPwd" type="password" placeholder="新密码" style="width:110px">
+      <button class="gray" onclick="updatePassword()">PUT /api/me/password</button>
+    </div>
+    <pre id="outProfile">（这里显示资料接口返回）</pre>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   Hiya 服务端测试页脚本（原生 JS，无任何框架/构建步骤）
+   流程：登录拿 userId → 之后所有请求都在 URL 上带 ?userId= → WebSocket 用 /ws?userId= 连接
+   ===================================================================== */
+
+let userId = null;      // 登录后拿到的用户ID
+let ws = null;          // WebSocket 连接对象
+let wsTimer = null;     // 心跳定时器
+let currentChatId = null; // 当前打开的会话ID
+
+/* 简易日志输出：往指定 <pre> 里追加一行 */
+function print(id, text) {
+  const el = document.getElementById(id);
+  el.textContent += text + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+function clearOut(id) { document.getElementById(id).textContent = ""; }
+
+/* 统一请求方法：自动在 URL 上追加 userId 参数，并打印请求/响应，方便观察 */
+async function api(path, options = {}) {
+  let url = path;
+  if (userId !== null) {
+    // 已经登录：把 userId 拼到 URL 上（?userId=1），服务器靠它知道"你是谁"
+    url += (path.includes("?") ? "&" : "?") + "userId=" + userId;
+  }
+  const resp = await fetch(url, options);
+  const json = await resp.json();
+  console.log(url, options.method || "GET", "→", resp.status, json);
+  return json;
+}
+
+/* ---------- 1. 注册 ---------- */
+async function doRegister() {
+  const body = JSON.stringify({
+    userName: document.getElementById("userName").value,
+    password: document.getElementById("password").value
+  });
+  clearOut("outUser");
+  const res = await api("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body
+  });
+  if (res.code === 200) {
+    print("outUser", "注册成功（可以去登录了）：" + JSON.stringify(res.data));
+  } else {
+    print("outUser", "注册失败：" + JSON.stringify(res));
+  }
+}
+
+/* ---------- 1. 登录 ---------- */
+async function doLogin() {
+  const body = JSON.stringify({
+    userName: document.getElementById("userName").value,
+    password: document.getElementById("password").value
+  });
+  clearOut("outUser");
+  const res = await api("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: body
+  });
+  if (res.code === 200) {
+    userId = res.data.userId;
+    document.getElementById("loginState").innerHTML =
+      '<span class="ok">✓ 登录成功，userId=' + userId + '</span>';
+    print("outUser", "登录成功：" + JSON.stringify(res.data));
+    connectWs();      // 登录后自动建立 WebSocket 连接
+    loadFriends();    // 顺便拉一次好友列表
+    loadChats();
+  } else {
+    document.getElementById("loginState").innerHTML =
+      '<span class="err">✗ ' + res.message + '</span>';
+  }
+}
+
+async function loadMe() {
+  clearOut("outUser");
+  print("outUser", JSON.stringify(await api("/api/me"), null, 2));
+}
+async function loadUserInfo() {
+  clearOut("outUser");
+  const id = document.getElementById("targetUserId").value;
+  print("outUser", JSON.stringify(await api("/api/info/" + id), null, 2));
+}
+async function loadOnline() {
+  clearOut("outUser");
+  print("outUser", JSON.stringify(await api("/api/friend/online"), null, 2));
+}
+
+/* ---------- 2. WebSocket ---------- */
+function connectWs() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  // 注意：浏览器 WebSocket 无法自定义请求头，所以身份走 URL 参数
+  ws = new WebSocket("ws://" + location.host + "/ws?userId=" + userId);
+
+  ws.onopen = function () {
+    document.getElementById("wsState").innerHTML = '<span class="ok">已连接</span>';
+    print("outWs", "[" + new Date().toLocaleTimeString() + "] WS 连接成功");
+    // 每 20 秒发一次心跳，防止中间代理把空闲连接掐断
+    wsTimer = setInterval(sendPing, 20000);
+  };
+  ws.onmessage = function (event) {
+    print("outWs", "[" + new Date().toLocaleTimeString() + "] 收到: " + event.data);
+    // 如果是消息广播，且属于当前打开的会话，就把它显示到消息列表
+    try {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "BROADCAST_MESSAGE" && msg.data.chatId === currentChatId) {
+        appendMessage(msg.data);
+      }
+    } catch (e) { /* 心跳等非 JSON 消息忽略 */ }
+  };
+  ws.onclose = function () {
+    document.getElementById("wsState").innerHTML = '<span class="err">已断开</span>';
+    print("outWs", "[" + new Date().toLocaleTimeString() + "] WS 连接已关闭");
+    if (wsTimer) { clearInterval(wsTimer); wsTimer = null; }
+  };
+  ws.onerror = function () { print("outWs", "WS 出错（检查后端是否启动、userId 是否正确）"); };
+}
+
+function sendPing() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "ping" }));
+    print("outWs", "[" + new Date().toLocaleTimeString() + "] 发出: {\"type\":\"ping\"}");
+  }
+}
+function closeWs() { if (ws) ws.close(); }
+
+/* ---------- 3. 好友 ---------- */
+async function loadFriends() {
+  clearOut("outFriend");
+  print("outFriend", JSON.stringify(await api("/api/friend/list"), null, 2));
+}
+async function addFriendRequest() {
+  const friendId = Number(document.getElementById("friendId").value);
+  clearOut("outFriend");
+  const res = await api("/api/friend/request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ friendId: friendId })
+  });
+  print("outFriend", "发送好友请求结果：" + JSON.stringify(res));
+  print("outFriend", "（若对方在线，对方浏览器会在 WS 日志里收到 FRIEND_REQUEST_NOTIFY）");
+}
+
+/* ---------- 4. 会话、群聊与消息 ---------- */
+
+/* 建群：POST /api/chat/room，创建者自动成为群主 */
+async function createRoom() {
+  const title = document.getElementById("roomTitle").value;
+  const res = await api("/api/chat/room", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chatTitle: title })
+  });
+  alert(res.code === 200
+    ? "建群成功：chatId=" + res.data.chatId + "（" + res.data.chatTitle + "）"
+    : "建群失败：" + res.message);
+  loadChats();  // 刷新会话列表
+}
+
+/* 加群：POST /api/chat/{chatId}/join */
+async function joinChat() {
+  const id = document.getElementById("joinChatId").value;
+  const res = await api("/api/chat/" + id + "/join", { method: "POST" });
+  alert(res.code === 200 ? "已加入群 " + id : "加入失败：" + res.message);
+  loadChats();
+}
+
+/* 退群：POST /api/chat/{chatId}/leave */
+async function leaveChat() {
+  const id = document.getElementById("joinChatId").value;
+  const res = await api("/api/chat/" + id + "/leave", { method: "POST" });
+  alert(res.code === 200 ? "已退出群 " + id : "退出失败：" + res.message);
+  loadChats();
+}
+
+async function loadChats() {
+  const res = await api("/api/chat/list");
+  const box = document.getElementById("chatList");
+  box.innerHTML = "";
+  if (res.code !== 200 || !res.data) return;
+  res.data.forEach(function (chat) {
+    const span = document.createElement("span");
+    span.className = "chat-item";
+    span.textContent = "会话#" + chat.chatId + (chat.chatTitle ? " " + chat.chatTitle : "")
+                     + (chat.type === 2 ? "（群）" : "（私聊）");
+    span.onclick = function () { openChat(chat.chatId); };
+    box.appendChild(span);
+  });
+}
+
+async function openChat(chatId) {
+  currentChatId = chatId;
+  const res = await api("/api/chat/" + chatId + "/messages");
+  document.getElementById("messageList").innerHTML = "";
+  if (res.code === 200 && res.data) res.data.forEach(appendMessage);
+}
+
+function appendMessage(m) {
+  const div = document.createElement("div");
+  div.className = "msg";
+  div.innerHTML = '<span class="who">用户' + m.senderId + '</span>'
+                + '<span class="time">' + (m.sendTime || "") + '</span><br>'
+                + escapeHtml(m.content || "");
+  document.getElementById("messageList").appendChild(div);
+  div.scrollIntoView();
+}
+
+async function sendMessage() {
+  if (currentChatId === null) { alert("请先点击上面的会话，选择一个聊天"); return; }
+  const text = document.getElementById("msgText").value;
+  const res = await api("/api/chat/" + currentChatId + "/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: text })   // msgType 不传，后端默认 1=文本
+  });
+  if (res.code !== 200) alert("发送失败：" + res.message);
+  // 注意：不需要手动把消息加到列表——服务器会通过 WebSocket 广播回来，
+  // 页面收到 BROADCAST_MESSAGE 后自动显示（含自己发的，旧系统行为如此）
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+/* ---------- 5. 修改我自己的资料 ---------- */
+
+/* 改资料：PUT /api/me（只传要改的字段，没传的后端不动） */
+async function updateProfile() {
+  clearOut("outProfile");
+  const res = await api("/api/me", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nickName: document.getElementById("pNick").value,
+      signature: document.getElementById("pSign").value,
+      gender: Number(document.getElementById("pGender").value)
+    })
+  });
+  print("outProfile", "修改资料结果：" + JSON.stringify(res, null, 2));
+}
+
+/* 查我的完整信息：GET /api/me/info */
+async function loadMyInfo() {
+  clearOut("outProfile");
+  print("outProfile", JSON.stringify(await api("/api/me/info"), null, 2));
+}
+
+/* 改密码：PUT /api/me/password */
+async function updatePassword() {
+  clearOut("outProfile");
+  const res = await api("/api/me/password", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      oldPassword: document.getElementById("oldPwd").value,
+      newPassword: document.getElementById("newPwd").value
+    })
+  });
+  print("outProfile", "改密码结果：" + JSON.stringify(res));
+}
+</script>
+</body>
+</html>

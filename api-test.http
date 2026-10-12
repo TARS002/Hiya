@@ -1,0 +1,145 @@
+### ============================================================
+### Hiya 服务端接口测试（VS Code 装 "REST Client" 插件后，点每段上方的 Send Request）
+### 身份：不需要请求头，直接在 URL 上带 ?userId=1
+### 使用顺序：先跑「1. 登录」，把返回的 userId 填到下面的 @userId 变量里
+### ============================================================
+
+@base = http://localhost:8080
+# 登录后把这里改成返回的 userId（旧库测试账号：1=bababoye, 2=Mambo, 3=ugliOrange）
+@userId = 1
+
+### 0. 首页：服务状态 + 接口清单（确认服务是否启动）
+GET {{base}}/
+
+### 1. 登录 → 返回 {userId, userName}
+POST {{base}}/api/login
+Content-Type: application/json
+
+{
+  "userName": "bababoye",
+  "password": "bababoye"
+}
+
+### 2. 注册新用户
+POST {{base}}/api/register
+Content-Type: application/json
+
+{
+  "userName": "test_user_001",
+  "password": "123456"
+}
+
+### 3. 查我自己的账号信息
+GET {{base}}/api/me?userId={{userId}}
+
+### 4. 查我自己的账号 + 资料
+GET {{base}}/api/me/info?userId={{userId}}
+
+### 5. 查别人的账号 + 资料
+GET {{base}}/api/info/2
+
+### 6. 修改我自己的资料（字段可选，只传要改的）
+PUT {{base}}/api/me?userId={{userId}}
+Content-Type: application/json
+
+{
+  "nickName": "新昵称",
+  "signature": "今天也要写代码",
+  "gender": 1,
+  "birthday": "2000-01-01"
+}
+
+### 7. 修改我自己的密码（需原密码）
+PUT {{base}}/api/me/password?userId={{userId}}
+Content-Type: application/json
+
+{
+  "oldPassword": "bababoye",
+  "newPassword": "newpass123"
+}
+
+### ==================== 聊天室 ====================
+
+### 8. 创建群聊（创建者自动成为群主）
+POST {{base}}/api/chat/room?userId={{userId}}
+Content-Type: application/json
+
+{
+  "chatTitle": "测试群"
+}
+
+### 9. 我的会话列表
+GET {{base}}/api/chat/list?userId={{userId}}
+
+### 10. 加入群聊（把 3 换成上面返回的 chatId）
+POST {{base}}/api/chat/3/join?userId={{userId}}
+
+### 11. 退出群聊
+POST {{base}}/api/chat/3/leave?userId={{userId}}
+
+### 12. 创建/获取与某好友的私聊会话
+POST {{base}}/api/chat/private?userId={{userId}}
+Content-Type: application/json
+
+{
+  "friendId": 3
+}
+
+### 13. 会话成员
+GET {{base}}/api/chat/1/members
+
+### 14. 聊天记录
+GET {{base}}/api/chat/1/messages
+
+### 15. 发送消息（会话内在线的成员会通过 WebSocket 收到 BROADCAST_MESSAGE）
+POST {{base}}/api/chat/1/messages?userId={{userId}}
+Content-Type: application/json
+
+{
+  "msgType": 1,
+  "content": "hello from REST Client"
+}
+
+### ==================== 好友 ====================
+
+### 16. 好友列表
+GET {{base}}/api/friend/list?userId={{userId}}
+
+### 17. 在线用户列表
+GET {{base}}/api/friend/online
+
+### 18. 申请加好友（对方不在线的话，通知发不出去，但接口仍返回成功）
+POST {{base}}/api/friend/request?userId={{userId}}
+Content-Type: application/json
+
+{
+  "friendId": 3
+}
+
+### 19. 同意好友申请
+POST {{base}}/api/friend/accept?userId={{userId}}
+Content-Type: application/json
+
+{
+  "requesterId": 3
+}
+
+### 20. 拒绝好友申请
+POST {{base}}/api/friend/reject?userId={{userId}}
+Content-Type: application/json
+
+{
+  "requesterId": 3
+}
+
+### 21. 删除好友
+DELETE {{base}}/api/friend/3?userId={{userId}}
+
+### 22. 反例：忘了带 userId → 返回 400 "缺少参数: userId"
+GET {{base}}/api/me
+
+### ============================================================
+### WebSocket 无法用 REST Client 测，请用：
+###   - 浏览器打开 http://localhost:8080/test.html（推荐）
+###   - 或 Apifox/Postman 的 WebSocket 功能：ws://localhost:8080/ws?userId=1
+### ============================================================
